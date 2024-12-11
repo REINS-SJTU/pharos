@@ -1,0 +1,7 @@
+torch
+gymnasium
+numpy
+matplotlib
+tensorboardX
+setproctitle
+pandas
