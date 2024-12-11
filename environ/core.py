@@ -1,32 +1,38 @@
 from typing import Generator, Tuple, List
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from environ.components import Vehicle, Zone, Human
 from environ.utils import Spot
 
 
-class Scenario:
+class Environ:
+    """
+    the environment for the agents to interact with
+    """
+
     def __init__(self) -> None:
         self.vehicles: list[Vehicle] = []
         self.humans: list[Human] = []
+
+        # the tick (in seconds) is essential
+        # small value leads to precises control and more adventurous actions
+        # large value leads to conservative actions, because too many things may happen in a tick
         self.__tick = 0.1
-        self.__elapsed = 0
 
     @property
     def tick(self) -> float:
         return self.__tick
 
-    @property
-    def elapsed(self) -> float:
-        return self.__elapsed
+    def step(self, zones: Generator[Zone, None, None]) -> Generator[Tuple[list[float], float, bool, bool], None, None]:
+        """
+        the episode steps forward, i.e. all vehicles and humans move for a tick
+        :param zones: a zone generator for each vehicle
+        :return: yield the observation of a single vehicle, the sequence is fixed for this episode
+        """
 
-    def step(self, zones: Generator[Zone, None, None]) -> Generator[Tuple[list[float], float, bool], None, None]:
-        self.__elapsed += 1
-
-        # everything steps forward, and collect base reward of all vehicles
         rewards = []
+        # vehicles steps forward, and collect base reward of all vehicles
         for vehicle, zone in zip(self.vehicles, zones):
             # offline vehicles do not have reward
             if vehicle.offline:
@@ -40,6 +46,7 @@ class Scenario:
             moved *= 0.95 + 0.05 * zone.efficiency(vehicle.boundary)
             rewards.append(moved)
 
+        # humans steps forward
         for human in self.humans:
             human.move()
 
@@ -49,10 +56,12 @@ class Scenario:
             # early yield if this vehicle is already offline
             if vehicle.offline:
                 dim = 5 + 8 * (len(self.vehicles) - 1) + 4 * len(self.humans)
-                yield [0.0] * dim, rewards[i], True
+                yield [0.0] * dim, rewards[i], False, True
                 continue
 
+            # properties of this vehicle for now, will be extended
             obs = [*vehicle.direction.t, vehicle.speed, vehicle.priority]
+            # the base word
             reward = rewards[i]
             # occurs when vehicle safely finished its journey
             done = False
@@ -63,7 +72,6 @@ class Scenario:
 
             if vehicle.odometer >= 20:
                 offline.append(i)
-                reward = 10.0
                 done = True
 
             # observe other vehicles
@@ -76,20 +84,19 @@ class Scenario:
                 info = *displacement.t, *other.direction.t, other.speed, other.priority
                 obs.extend(info)
 
-                if warned or crashed:
+                if done or warned or crashed:
                     continue
 
                 distance = displacement.magnitude
                 # too close
-                if distance < 1:
+                if distance < 1.0:
                     offline.append(i)
                     crashed = True
                 # encourage vehicles with high priority to move, and the others to wait
-                elif distance < 5 and vehicle.priority < other.priority and vehicle.speed > 0:
+                elif distance < 5.0 and vehicle.priority < other.priority and vehicle.speed > 0.0:
                     warned = True
                 # encourage conservative actions when the surrounding gets complicated
-                # cumulated with observation of humans
-                elif distance < 10 and vehicle.speed > 5 and other.speed > 5:
+                elif distance < 10.0 and vehicle.speed > 5.0 and other.speed > 5.0:
                     reward *= 0.9 + 0.01 * distance
 
             # observe all humans
@@ -103,72 +110,91 @@ class Scenario:
                 info = *displacement.t, stress
                 obs.extend(info)
 
-                if warned or crashed:
+                if done or warned or crashed:
                     continue
 
                 # reduce reward if the human is stressful
-                reward *= 0.9 + 0.1 * (1 - stress)
+                reward *= 0.9 + 0.1 * (1.0 - stress)
 
                 distance = displacement.magnitude
-                # too close
-                # crash only if moving, otherwise, it's human's fault
-                if distance < 1 < vehicle.speed:
+                # crash only if the vehicle moves too fast
+                # human will stay away from vehicles, if not, it is human's fault
+                if distance < 1.0 < vehicle.speed:
                     offline.append(i)
                     crashed = True
                 # a warned of hitting a human
                 elif distance < 5 and vehicle.speed > 0.5:
                     warned = True
                 # encourage conservative actions when the surrounding gets complicated
-                # cumulated with observation of vehicles
-                elif distance < 10 and vehicle.speed > 5:
+                elif distance < 10.0 and vehicle.speed > 5.0:
                     reward *= 0.9 + 0.01 * distance
 
-            if crashed:
-                yield obs, -10.0, True
+            # obs, reward, crash, done
+            if done:
+                yield obs, 10.0, False, True
+            elif crashed:
+                yield obs, -10.0, True, True
             elif warned:
-                yield obs, -vehicle.speed / vehicle.v, done
+                yield obs, -vehicle.speed / vehicle.v, False, False
             else:
-                yield obs, reward, done
+                yield obs, reward, False, False
 
         # late update offline vehicles
         for i in offline:
             self.vehicles[i].offline = True
 
     def reset(self, vehicles=7, humans=6) -> Generator[List[float], None, None]:
+        """
+        reset all parameters and regenerate all vehicles and humans
+        :param vehicles: number of vehicles
+        :param humans: number of humans
+        :return: yield the observation of a single vehicle, the sequence is fixed for this episode
+        """
         assert 1 <= vehicles <= 7
         assert 0 <= humans <= 6
-        self.__elapsed = 0
 
+        # reset all
         self.vehicles.clear()
+        self.humans.clear()
+
+        # generate vehicles
         for _ in range(7):
+            # immutable properties
             start = Spot.normal(10, 0.1)
             priority = np.random.uniform(1, 3)
             vehicle = Vehicle(14, 7, priority, self.tick)
+            # mutable properties
             vehicle.position = start
-            vehicle.direction = -start.normalized
+            vehicle.direction = -start.normalized  # point towards the origin
             vehicle.speed = np.random.normal(7, 0.1)
             self.vehicles.append(vehicle)
 
+        # shut down vehicles that are not needed
         for i in range(7 - vehicles):
             self.vehicles[i].offline = True
         np.random.shuffle(self.vehicles)
 
-        self.humans.clear()
+        # generate humans
         for _ in range(6):
+            # immutable properties
             theta = np.random.uniform(-np.pi, np.pi)
             phi = np.random.uniform(0, np.pi)
             human = Human(1, theta, phi, self.tick)
+            # mutable properties
             human.position = Spot.uniform(0, 7)
-            human.direction = Spot.uniform(0, 1)
+            human.direction = Spot.at(1)  # random unit vector
             self.humans.append(human)
 
+        # shut down humans that are not needed
         for i in range(6 - humans):
             self.humans[i].offline = True
         np.random.shuffle(self.humans)
 
         for i, vehicle in enumerate(self.vehicles):
+            # properties of this vehicle for now, will be extended
             obs = [*vehicle.direction.t, vehicle.speed, vehicle.priority]
 
+            # observe other vehicles
             for other in self.vehicles[:i] + self.vehicles[i + 1:]:
                 if other.offline:
                     obs.extend([0.0] * 8)
@@ -177,6 +203,7 @@ class Scenario:
                 info = *displacement.t, *other.direction.t, other.speed, other.priority
                 obs.extend(info)
 
+            # observe all humans
             for human in self.humans:
                 if human.offline:
                     obs.extend([0.0] * 4)
@@ -187,45 +214,3 @@ class Scenario:
                 obs.extend(info)
 
             yield obs
-
-    def render(self, vehicle=True, human=True) -> None:
-        ax = plt.subplot(projection='3d')
-        ax.set_xlim3d(-10, 10)
-        ax.set_ylim3d(-10, 10)
-        ax.set_zlim3d(-10, 10)
-        ax.scatter(0, 0, 0, c='black')
-
-        var = np.tanh(self.elapsed / 60)
-
-        if human:
-            for human in self.humans:
-                ax.scatter(*human.position.t, c=[[0.5, 0.5, 0.5]], s=2)
-
-        if vehicle:
-            for vehicle in self.vehicles:
-                ax.scatter(*vehicle.position.t, c=[[var, 0.0, 0.0]], s=2)
-
-    @staticmethod
-    def demo():
-        def helper():
-            while True:
-                c = (0.7, 0.7)
-                yield Zone(c, c, c)
-
-        scenario = Scenario()
-
-        for _ in scenario.reset():
-            pass
-        scenario.render()
-
-        for _ in range(50):
-            zones = helper()
-            dones = []
-            for _, _, done in scenario.step(zones):
-                dones.append(done)
-            scenario.render()
-
-            if all(dones):
-                break
-
-        plt.show()

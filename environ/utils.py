@@ -4,13 +4,12 @@ import numpy as np
 
 
 class Vector3:
+    """vector in cartesian spaces"""
+
     def __init__(self, x: float, y: float, z: float):
         self.x = x
         self.y = y
         self.z = z
-
-    def __str__(self) -> str:
-        return f'({self.x:.2f}, {self.y:.2f}, {self.z:.2f})'
 
     def __add__(self, other: 'Vector3') -> 'Vector3':
         return Vector3(self.x + other.x, self.y + other.y, self.z + other.z)
@@ -51,6 +50,17 @@ class Vector3:
 
 
 class Spot:
+    """collection of functions that generate a random spot on a sphere with given radius"""
+
+    @staticmethod
+    def at(r: float) -> Vector3:
+        theta = np.random.uniform(-np.pi, np.pi)
+        phi = np.random.uniform(0, np.pi)
+        x = r * np.sin(phi) * np.cos(theta)
+        y = r * np.sin(phi) * np.sin(theta)
+        z = r * np.cos(phi)
+        return Vector3(x, y, z)
+
     @staticmethod
     def uniform(low: float, high: float) -> Vector3:
         r = np.random.uniform(low, high)

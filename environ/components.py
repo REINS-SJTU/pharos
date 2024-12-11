@@ -6,6 +6,13 @@ from environ.utils import Vector3
 
 
 def spinner(alpha: float, beta: float, gamma: float) -> np.ndarray:
+    """
+    build a spinner that can rotate a vector in three dimensions
+    :param alpha: radians for x-axis
+    :param beta: radians for y-axis
+    :param gamma: radians for z-axis
+    :return: a numpy array
+    """
     x = np.array([
         [1, 0, 0],
         [0, np.cos(alpha), -np.sin(alpha)],
@@ -26,6 +33,13 @@ def spinner(alpha: float, beta: float, gamma: float) -> np.ndarray:
 
 class Zone:
     def __init__(self, x: Tuple[float, float], y: Tuple[float, float], z: Tuple[float, float]) -> None:
+        """
+        the rectangular exclusive zone that vehicles are restricted in
+        the zone always align with the cartesian axis
+        :param x: magnitude of restrictions in negative and positive x-axis
+        :param y: magnitude of restrictions in negative and positive y-axis
+        :param z: magnitude of restrictions in negative and positive z-axis
+        """
         assert np.greater_equal(x, 0).all()
         assert np.greater_equal(y, 0).all()
         assert np.greater_equal(z, 0).all()
@@ -34,9 +48,15 @@ class Zone:
         self.__z = z
 
     def efficiency(self, c: float):
+        """the zone space divided by the maximum capacity"""
         return sum(self.__x) * sum(self.__y) * sum(self.__z) / (c * 2) ** 3
 
     def constraint(self, direction: Vector3) -> float:
+        """
+        given a direction, find the distance between the center to the surface
+        :param direction: the direction (unit vector) the vehicle heads to
+        :return: the distance, a.k.a. constraint
+        """
         with np.errstate(divide='ignore'):
             constraints = (
                 -self.__x[0] / direction.x,
@@ -46,6 +66,9 @@ class Zone:
                 -self.__z[0] / direction.z,
                 self.__z[1] / direction.z,
             )
+        # there should be at most three of them being positive, same for the negative
+        # ignore the constraints less than zero because it is the opposite to the direction
+        # if here throws an error, it means your direction is a zero vector
         factor = min(i for i in constraints if i >= 0)
         return factor
 

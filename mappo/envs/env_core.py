@@ -1,12 +1,12 @@
 import numpy as np
 
 from environ.components import Zone
-from environ.scenario import Scenario
+from environ.core import Environ
 
 
 class EnvCore(object):
     def __init__(self):
-        self.scenario = Scenario()
+        self.environ = Environ()
         self.agent_num = 7
         self.obs_dim = 77
         self.action_dim = 6
@@ -15,7 +15,7 @@ class EnvCore(object):
         sub_agent_obs = []
         vehicles = np.random.randint(1, 8)
         humans = np.random.randint(0, 7)
-        for obs in self.scenario.reset(vehicles, humans):
+        for obs in self.environ.reset(vehicles, humans):
             sub_agent_obs.append(obs)
         return sub_agent_obs
 
@@ -26,7 +26,7 @@ class EnvCore(object):
         sub_agent_info = []
 
         zones = (Zone(i[:2], i[2:4], i[4:6]) for i in actions)
-        for obs, reward, done in self.scenario.step(zones):
+        for obs, reward, _, done in self.environ.step(zones):
             sub_agent_obs.append(obs)
             sub_agent_reward.append([reward])
             sub_agent_done.append(done)

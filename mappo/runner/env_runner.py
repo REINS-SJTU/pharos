@@ -70,7 +70,7 @@ class EnvRunner(Runner):
             if episode % self.log_interval == 0:
                 end = time.time()
                 print(
-                    "\n Scenario {} Algo {} Exp {} updates {}/{} episodes, total num timesteps {}/{}, FPS {}.\n".format(
+                    "\n Environ {} Algo {} Exp {} updates {}/{} episodes, total num timesteps {}/{}, FPS {}.\n".format(
                         self.all_args.scenario_name,
                         self.algorithm_name,
                         self.experiment_name,
