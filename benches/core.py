@@ -58,16 +58,12 @@ class Benchmark:
         else:
             return crashes, self.limit, False
 
-    def repetition(self, vehicles: int, humans: int) -> Tuple[List[int], List[int], List[bool]]:
+    def repetition(self, vehicles: int, humans: int) -> List[Tuple[int, int, bool]]:
         assert 1 <= vehicles <= 7
         assert 0 <= humans <= 6
 
-        crashes = []
-        steps = []
-        dones = []
+        result = []
         for _ in range(self.rep):
-            crash, step, done = self.onetime(vehicles, humans)
-            crashes.append(crash)
-            steps.append(step)
-            dones.append(done)
-        return crashes, steps, dones
+            data = self.onetime(vehicles, humans)
+            result.append(data)
+        return result

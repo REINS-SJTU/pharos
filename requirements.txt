@@ -3,3 +3,4 @@ gymnasium
 numpy
 tensorboardX
 setproctitle
+pandas
