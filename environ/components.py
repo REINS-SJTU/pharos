@@ -74,16 +74,27 @@ class Zone:
 
 
 class Vehicle:
+    """a generalized vehicle described by its maximum velocity and acceleration"""
+
     def __init__(self, v: float, a: float, priority: float, tick: float) -> None:
+        """
+
+        :param v: maximum velocity
+        :param a: maximum acceleration
+        :param priority: the higher priority the more privilege
+        :param tick: the unit time
+        """
         assert 0 < v
         assert 0 < a
         assert 0 < priority
         assert 0 < tick
+        # immutable properties
         self.__v = v
         self.__a = a
-        self.__priority = priority
+        self.__priority = priority  # immutable here, but mutable in practice
         self.__tick = tick
         self.__odometer = 0.0
+        # the followings are mutable variables
         self.direction = Vector3(0, 0, 0)
         self.position = Vector3(0, 0, 0)
         self.speed = 0
@@ -111,28 +122,46 @@ class Vehicle:
 
     @property
     def boundary(self) -> float:
+        """the maximum distance this vehicle can reach in a unit time"""
         return self.v * self.tick
 
     def move(self, zone: Zone, randomness=0.05) -> float:
+        """
+        the vehicle moves and ensures that it tries its best utilizing the give zone while not exceeding it
+        :param zone: the exclusive zone
+        :param randomness: indeterministic trajectory, keep it low for vehicles
+        :return: moved distance in this unit time
+        """
         alpha, beta, gamma = np.random.normal(0.0, self.tick * randomness, size=3)
+        # apply randomness to the direction
         rotated = self.direction.t @ spinner(alpha, beta, gamma)
         self.direction = Vector3(*rotated)
 
+        # here is the core trajectory simulation, but the physics is twisted
+        # try not to modify this part, it is really fragile
         constraint = zone.constraint(self.direction)
         vi = self.speed
+
+        # find the acceleration the vehicle need to fully utilize the zone
         a = 2 / self.tick ** 2 * (constraint - vi * self.tick)
+        # do not decelerate too fast, which leads to negative final velocity
         a = np.clip(a, -min(vi / self.tick, self.a), self.a)
 
         if a > 0 and (t := abs(self.v - vi) / a) < self.tick:
+            # maximum velocity is reached, we calculate them separately
             d1 = vi * t + 1 / 2 * a * t ** 2
             d2 = self.v * (self.tick - t)
             moved, vf = d1 + d2, self.v
         else:
             d = vi * self.tick + 1 / 2 * a * self.tick ** 2
             vf = vi + a * self.tick
+            # the clip function gets rid of negative numbers due to float inaccuracy
+            # in theory, vf is always greater or equal to zero
             moved, vf = d, np.clip(vf, 0, None)
 
         self.__odometer += moved
+
+        # update the position and speed
         self.position += self.direction * moved
         self.speed = vf
 
@@ -161,23 +190,43 @@ class Human:
         return self.__tick
 
     def move(self, randomness=0.5) -> None:
+        """
+        the human moves with a constant velocity
+        :param randomness: indeterministic path, keep it high for humans
+        :return: nothing
+        """
         alpha, beta, gamma = np.random.normal(0.0, self.tick * randomness, size=3)
+        # apply randomness to the direction
         rotated = self.direction.t @ spinner(alpha, beta, gamma)
         self.direction = Vector3(*rotated)
+
+        # update the position
         self.position += self.direction * self.tick * self.v
 
     def observe(self, vehicle: Vehicle) -> float:
+        """
+        human take observe and feel the vehicle
+        :param vehicle: the target the human is looking at
+        :return: the stress of human
+        """
         relation = vehicle.position - self.position
+        # the calculation is done in polar form for simplicity
+        # another twisted calculation, so try not to modify
         h = abs(self.__theta - relation.theta)
         v = abs(self.__phi - relation.phi)
-        c = np.pi / 180
+        c = np.pi / 180  # degree to radian factor
         if h > np.pi:
             h = 2 * np.pi - h
 
+        # whether the vehicle is visible to the human
+        # view range is about 160 degrees horizontally and 120 degrees vertically
         visible = v < 60 * c and h < 80 * c
+        # the distance between the human and the vehicle
         distance = relation.magnitude
+        # whether the vehicle is having a level trajectory
         level = abs(vehicle.direction.z) <= 0.2
 
+        # equally weighted
         return 0.0 \
             + 0.25 * (distance < 8 and not level) \
             + 0.25 * (distance < 8 and not visible) \

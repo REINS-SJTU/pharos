@@ -18,6 +18,8 @@ class Environ:
         # the tick (in seconds) is essential
         # small value leads to precises control and more adventurous actions
         # large value leads to conservative actions, because too many things may happen in a tick
+        # make the sure it is larger than the sum of all network and computation latencies
+        # if a big change is made to it, consider re-designing the whole environment
         self.__tick = 0.1
 
     @property
@@ -59,7 +61,7 @@ class Environ:
                 yield [0.0] * dim, rewards[i], False, True
                 continue
 
-            # properties of this vehicle for now, will be extended
+            # init with properties of this vehicle, will be extended
             obs = [*vehicle.direction.t, vehicle.speed, vehicle.priority]
             # the base word
             reward = rewards[i]
@@ -191,7 +193,7 @@ class Environ:
         np.random.shuffle(self.humans)
 
         for i, vehicle in enumerate(self.vehicles):
-            # properties of this vehicle for now, will be extended
+            # init with properties of this vehicle, will be extended
             obs = [*vehicle.direction.t, vehicle.speed, vehicle.priority]
 
             # observe other vehicles
