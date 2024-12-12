@@ -7,18 +7,17 @@ from environ.utils import Spot
 
 
 class Environ:
-    """
-    the environment for the agents to interact with
-    """
-
     def __init__(self) -> None:
+        """
+        the environment for the agents to interact with
+        """
         self.vehicles: list[Vehicle] = []
         self.humans: list[Human] = []
 
         # the tick (in seconds) is essential
         # small value leads to precises control and more adventurous actions
         # large value leads to conservative actions, because too many things may happen in a tick
-        # make the sure it is larger than the sum of all network and computation latencies
+        # make sure it is larger than the sum of all network and computation latencies
         # if a big change is made to it, consider re-designing the whole environment
         self.__tick = 0.1
 

@@ -74,11 +74,9 @@ class Zone:
 
 
 class Vehicle:
-    """a generalized vehicle described by its maximum velocity and acceleration"""
-
     def __init__(self, v: float, a: float, priority: float, tick: float) -> None:
         """
-
+        a generalized vehicle described by its maximum velocity and acceleration
         :param v: maximum velocity
         :param a: maximum acceleration
         :param priority: the higher priority the more privilege
@@ -170,6 +168,13 @@ class Vehicle:
 
 class Human:
     def __init__(self, v: float, theta: float, phi: float, tick: float) -> None:
+        """
+        a generalized human described by velocity and views
+        :param v: velocity
+        :param theta: theta of view angle
+        :param phi: phi of view angle
+        :param tick: the unit time
+        """
         assert 0 <= v
         assert -np.pi <= theta <= np.pi
         assert 0 <= phi <= np.pi

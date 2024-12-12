@@ -4,9 +4,13 @@ import numpy as np
 
 
 class Vector3:
-    """vector in cartesian spaces"""
-
     def __init__(self, x: float, y: float, z: float):
+        """
+        vector in cartesian spaces
+        :param x: x component of vector
+        :param y: y component of vector
+        :param z: z component of vector
+        """
         self.x = x
         self.y = y
         self.z = z
@@ -50,10 +54,13 @@ class Vector3:
 
 
 class Spot:
-    """collection of functions that generate a random spot on a sphere with given radius"""
-
     @staticmethod
     def at(r: float) -> Vector3:
+        """
+        generate a random spot on a sphere with given radius
+        :param r: the explicit radius
+        :return: cartesian spot
+        """
         theta = np.random.uniform(-np.pi, np.pi)
         phi = np.random.uniform(0, np.pi)
         x = r * np.sin(phi) * np.cos(theta)
@@ -63,6 +70,12 @@ class Spot:
 
     @staticmethod
     def uniform(low: float, high: float) -> Vector3:
+        """
+        generate a random spot on a sphere with radius falls in given range
+        :param low: lower bound of the range
+        :param high: upper bound of the range
+        :return: cartesian spot
+        """
         r = np.random.uniform(low, high)
         theta = np.random.uniform(-np.pi, np.pi)
         phi = np.random.uniform(0, np.pi)
@@ -73,6 +86,12 @@ class Spot:
 
     @staticmethod
     def normal(loc: float, scale: float) -> Vector3:
+        """
+        generate a random spot on a sphere with radius falls in given normal distribution
+        :param loc: location of the normal distribution
+        :param scale: scale of the normal distribution
+        :return: cartesian spot
+        """
         r = np.random.normal(loc, scale)
         theta = np.random.uniform(-np.pi, np.pi)
         phi = np.random.uniform(0, np.pi)

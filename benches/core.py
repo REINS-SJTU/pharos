@@ -1,4 +1,4 @@
-from typing import Any, Tuple, List
+from typing import Any, Tuple, List, Generator
 
 import gymnasium as gym
 import numpy as np
@@ -12,6 +12,12 @@ from mappo.config import get_config
 
 class Benchmark:
     def __init__(self, path: str, limit: int, rep: int):
+        """
+        init a bench
+        :param path: path of actor model, usually named actor.pt
+        :param limit: episode length, exceeding this limit leads to failure of episode
+        :param rep: repetition of each episode
+        """
         model = R_Actor(
             get_config().parse_known_args()[0],
             gym.spaces.Box(-np.inf, np.inf, [77], dtype=np.float32),
@@ -25,7 +31,12 @@ class Benchmark:
         self.limit = limit
         self.rep = rep
 
-    def predict(self, obs: List[Any]):
+    def predict(self, obs: List[Any]) -> Generator[Zone, None, None]:
+        """
+        let the model predict action based on observation
+        :param obs: collection of observation of all agents
+        :return: a generator that yields predicted zones
+        """
         for each in obs:
             # np.zeros(0) are used to fill rnn states which is not used
             action, _, _ = self.model(np.array(each), np.zeros(0), np.zeros(0), deterministic=True)
@@ -34,6 +45,12 @@ class Benchmark:
             yield Zone(action[:2], action[2:4], action[4:6])
 
     def onetime(self, vehicles: int, humans: int) -> Tuple[int, int, bool]:
+        """
+        run the episode of the given scenario
+        :param vehicles: number of vehicles
+        :param humans: number of humans
+        :return: a tuple of crashes, steps, and done
+        """
         assert 1 <= vehicles <= 7
         assert 0 <= humans <= 6
 
@@ -59,6 +76,12 @@ class Benchmark:
             return crashes, self.limit, False
 
     def repetition(self, vehicles: int, humans: int) -> List[Tuple[int, int, bool]]:
+        """
+        run the episode of the given scenario multiple times
+        :param vehicles: number of vehicles
+        :param humans: number of humans
+        :return: a list of all episode results
+        """
         assert 1 <= vehicles <= 7
         assert 0 <= humans <= 6
 
