@@ -12,7 +12,7 @@ def worker(path: str, v: int, limit: int, rep: int, table: List[List[Any]]):
         table[v - 1][h] = bench.repetition(v, h)
 
 
-def main(path: str, /, limit=900, rep=100):
+def main(path: str, *, limit=900, rep=100):
     with mp.Manager() as manager:
         table = manager.list([manager.list([None for _ in range(7)]) for _ in range(7)])
         workers = [mp.Process(target=worker, args=(path, v, limit, rep, table)) for v in range(1, 8)]

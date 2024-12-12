@@ -132,7 +132,7 @@ def get_config():
     parser.add_argument(
         "--layer_N",
         type=int,
-        default=1,
+        default=2,
         help="Number of layers for actor/critic networks",
     )
     parser.add_argument(

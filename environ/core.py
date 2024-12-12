@@ -179,7 +179,7 @@ class Environ:
             # immutable properties
             theta = np.random.uniform(-np.pi, np.pi)
             phi = np.random.uniform(0, np.pi)
-            human = Human(1, theta, phi, self.tick)
+            human = Human(0.5, theta, phi, self.tick)
             # mutable properties
             human.position = Spot.uniform(0, 7)
             human.direction = Spot.at(1)  # random unit vector
