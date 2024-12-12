@@ -12,7 +12,7 @@ pip3 install -r requirements.txt
 
 ## Usage
 
-To train the model with optional [arguments](mappo/config.py):
+Train the model with optional [arguments](mappo/config.py):
 
 ```shell
 python3 train.py
@@ -20,7 +20,7 @@ python3 train.py
 
 ## Benchmark
 
-Benchmark procedure is up to the users, but some helper functions are available in module [benches](benches). Refer to [analysis.ipynb](analysis.ipynb) for basic usage and sample analysis.
+The benchmark procedure is up to the users, but some helper functions with multiprocessing support are available in module [benches](benches). Refer to [analysis.ipynb](analysis.ipynb) for basic usage and sample analysis.
 
 ## License
 
