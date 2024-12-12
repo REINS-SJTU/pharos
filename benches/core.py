@@ -11,7 +11,7 @@ from mappo.config import get_config
 
 
 class Benchmark:
-    def __init__(self, path: str):
+    def __init__(self, path: str, limit: int, rep: int):
         model = R_Actor(
             get_config().parse_known_args()[0],
             gym.spaces.Box(-np.inf, np.inf, [77], dtype=np.float32),
@@ -22,8 +22,8 @@ class Benchmark:
         model.load_state_dict(policy_actor_state_dict)
 
         self.model = model
-        self.limit = 900
-        self.rep = 100
+        self.limit = limit
+        self.rep = rep
 
     def predict(self, obs: List[Any]):
         for each in obs:

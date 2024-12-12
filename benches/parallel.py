@@ -6,16 +6,16 @@ import numpy as np
 from benches.core import Benchmark
 
 
-def worker(path: str, v: int, table: List[List[Any]]):
-    bench = Benchmark(path)
+def worker(path: str, v: int, limit: int, rep: int, table: List[List[Any]]):
+    bench = Benchmark(path, limit, rep)
     for h in range(7):
         table[v - 1][h] = bench.repetition(v, h)
 
 
-def main(path: str):
+def main(path: str, /, limit=900, rep=100):
     with mp.Manager() as manager:
         table = manager.list([manager.list([None for _ in range(7)]) for _ in range(7)])
-        workers = [mp.Process(target=worker, args=(path, v, table)) for v in range(1, 8)]
+        workers = [mp.Process(target=worker, args=(path, v, limit, rep, table)) for v in range(1, 8)]
 
         for each in workers:
             each.start()
