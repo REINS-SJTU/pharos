@@ -22,7 +22,7 @@ class Benchmark:
         model.load_state_dict(policy_actor_state_dict)
 
         self.model = model
-        self.limit = 800
+        self.limit = 900
         self.rep = 100
 
     def predict(self, obs: List[Any]):
