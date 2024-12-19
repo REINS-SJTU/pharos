@@ -1,3 +1,5 @@
+> UNOFFICIAL OUTCOMES
+
 # Training
 
 Average episode reward:
@@ -64,7 +66,7 @@ After:
 | v6 | 125.0 | 165.5 | 210.5 | 204.0 | 259.0 | 259.5 | 283.0 |
 | v7 | 167.0 | 190.5 | 219.5 | 260.5 | 272.0 | 313.0 | 334.5 |
 
-The time taken is jointly proportional to the number of vehicles and the number of humans. Since the baseline just lets all vehicles crash into each other, the length of the episode is very short, i.e., it is completed in around 1s. The results are not comparable. However, even for the most complicated case, it only takes about 33s to finish the episode on median, which is still a decent number.
+The time taken is jointly proportional to the number of vehicles and the number of humans. Since the baseline simply lets all vehicles crash into each other, the length of the episode is quite short; specifically, it is completed in around 1 second. As a result, the results are not comparable. However, when the model is used, for the most complicated case, it only takes about 33 seconds to finish the episode on median, which is still a reasonable number.
 
 The median value is preferred over the mean value because there exist edge cases that are impossible to complete without crashing. In those cases, the most optimal policy is to stop the vehicles from moving forward all the time. This will lead to very large time steps and failure in completion. Thus, the mean value is not a reasonable representation.
 
