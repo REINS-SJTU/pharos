@@ -1,6 +1,7 @@
-torch
-gymnasium
-numpy
-tensorboardX
-setproctitle
-pandas
+torch==2.5.1
+gymnasium==1.0.0
+numpy==2.2.1
+tensorboardX==2.6.2.2
+setproctitle==1.3.4
+pandas==2.2.3
+fastapi[standard]==0.115.6
